@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-text {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .prediction-result {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .prediction-icon {
+            font-size: 3em;
+        }
+
+        .prediction-details h3 {
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .probability-bar {
+            background: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .probability-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .risk-low { background: #28a745; }
+        .risk-medium { background: #ffc107; }
+        .risk-high { background: #dc3545; }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-trained {
+            background: #28a745;
+        }
+
+        .status-not-trained {
+            background: #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔮 Customer Churn Prediction System</h1>
+            <p>Predict customer churn with advanced machine learning</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Model Status</h2>
+            <div id="model-status">
+                <span class="status-indicator status-not-trained"></span>
+                <span>Model not trained yet</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('train')">🎯 Train Model</div>
+                <div class="tab" onclick="showTab('predict')">🔍 Single Prediction</div>
+                <div class="tab" onclick="showTab('batch')">📄 Batch Prediction</div>
+            </div>
+
+            <div id="train-tab" class="tab-content active">
+                <h2>🎯 Train Model</h2>
+                <p>Upload your training data to build the churn prediction model</p>
+                
+                <div class="file-upload" onclick="document.getElementById('train-file').click()">
+                    <div class="file-upload-text">📁 Click to upload training data (CSV)</div>
+                    <small>Upload CSV file with customer data including 'Exited' column</small>
+                    <input type="file" id="train-file" accept=".csv" onchange="trainModel()">
+                </div>
+
+                <div class="loading" id="train-loading">
+                    <div class="spinner"></div>
+                    <p>Training model, please wait...</p>
+                </div>
+
+                <div id="train-result"></div>
+            </div>
+
+            <div id="predict-tab" class="tab-content">
+                <h2>🔍 Single Customer Prediction</h2>
+                <p>Enter customer details to predict churn probability</p>
+
+                <form id="predict-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender">Gender:</label>
+                            <select id="gender" name="Gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age:</label>
+                            <input type="number" id="age" name="Age" min="18" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tenure">Tenure (years):</label>
+                            <input type="number" id="tenure" name="Tenure" min="0" max="20" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="balance">Account Balance:</label>
+                            <input type="number" id="balance" name="Balance" min="0" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="num-products">Number of Products:</label>
+                            <input type="number" id="num-products" name="NumOfProducts" min="1" max="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="estimated-salary">Estimated Salary:</label>
+                            <input type="number" id="estimated-salary" name="EstimatedSalary" min="0" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="has-cr-card">Has Credit Card:</label>
+                            <select id="has-cr-card" name="HasCrCard" required>
+                                <option value="">Select</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="is-active">Is Active Member:</label>
+                            <select id="is-active" name="IsActiveMember" required>
+                                <option value="">Select</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">🔮 Predict Churn</button>
+                </form>
+
+                <div class="loading" id="predict-loading">
+                    <div class="spinner"></div>
+                    <p>Making prediction...</p>
+                </div>
+
+                <div id="predict-result"></div>
+            </div>
+
+            <div id="batch-tab" class="tab-content">
+                <h2>📄 Batch Prediction</h2>
+                <p>Upload a CSV file with multiple customers to predict churn for all</p>
+
+                <div class="file-upload" onclick="document.getElementById('batch-file').click()">
+                    <div class="file-upload-text">📁 Click to upload customer data (CSV)</div>
+                    <small>Upload CSV file with customer data (without 'Exited' column)</small>
+                    <input type="file" id="batch-file" accept=".csv" onchange="batchPredict()">
+                </div>
+
+                <div class="loading" id="batch-loading">
+                    <div class="spinner"></div>
+                    <p>Processing batch prediction...</p>
+                </div>
+
+                <div id="batch-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check model status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkModelStatus();
+        });
+
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Show selected tab
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function checkModelStatus() {
+            fetch('/model_status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('model-status');
+                    if (data.is_trained) {
+                        statusDiv.innerHTML = `
+                            <span class="status-indicator status-trained"></span>
+                            <span>Model trained with ${data.feature_count} features</span>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `
+                            <span class="status-indicator status-not-trained"></span>
+                            <span>Model not trained yet</span>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking model status:', error);
+                });
+        }
+
+        function trainModel() {
+            const fileInput = document.getElementById('train-file');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('train-loading').style.display = 'block';
+            document.getElementById('train-result').innerHTML = '';
+            
+            fetch('/train', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('train-loading').style.display = 'none';
+                
+                if (data.success) {
+                    document.getElementById('train-result').innerHTML = `
+                        <div class="result success">
+                            <h3>✅ ${data.message}</h3>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.data_shape[0]}</div>
+                                    <div class="stat-label">Total Records</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.features}</div>
+                                    <div class="stat-label">Features</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${(data.churn_rate * 100).toFixed(1)}%</div>
+                                    <div class="stat-label">Churn Rate</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    checkModelStatus();
+                } else {
+                    document.getElementById('train-result').innerHTML = `
+                        <div class="result error">
+                            <h3>❌ ${data.message}</h3>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('train-loading').style.display = 'none';
+                document.getElementById('train-result').innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error: ${error.message}</h3>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('predict-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = isNaN(value) ? value : parseFloat(value);
+            }
+            
+            document.getElementById('predict-loading').style.display = 'block';
+            document.getElementById('predict-result').innerHTML = '';
+            
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('predict-loading').style.display = 'none';
+                
+                if (result.success) {
+                    const riskClass = result.risk_category.toLowerCase();
+                    const icon = result.prediction ? '⚠️' : '✅';
+                    
+                    document.getElementById('predict-result').innerHTML = `
+                        <div class="result ${result.prediction ? 'error' : 'success'}">
+                            <div class="prediction-result">
+                                <div class="prediction-icon">${icon}</div>
+                                <div class="prediction-details">
+                                    <h3>${result.message}</h3>
+                                    <p><strong>Churn Probability:</strong> ${(result.probability * 100).toFixed(1)}%</p>
+                                    <p><strong>Risk Category:</strong> ${result.risk_category}</p>
+                                    <div class="probability-bar">
+                                        <div class="probability-fill risk-${riskClass}" style="width: ${result.probability * 100}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('predict-result').innerHTML = `
+                        <div class="result error">
+                            <h3>❌ ${result.message}</h3>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('predict-loading').style.display = 'none';
+                document.getElementById('predict-result').innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error: ${error.message}</h3>
+                    </div>
+                `;
+            });
+        });
+
+        function batchPredict() {
+            const fileInput = document.getElementById('batch-file');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('batch-loading').style.display = 'block';
+            document.getElementById('batch-result').innerHTML = '';
+            
+            fetch('/predict_batch', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('batch-loading').style.display = 'none';
+                
+                if (data.success) {
+                    document.getElementById('batch-result').innerHTML = `
+                        <div class="result success">
+                            <h3>✅ ${data.message}</h3>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.summary.total_customers}</div>
+                                    <div class="stat-label">Total Customers</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.summary.predicted_churn}</div>
+                                    <div class="stat-label">Predicted Churn</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${(data.summary.churn_rate * 100).toFixed(1)}%</div>
+                                    <div class="stat-label">Churn Rate</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${data.summary.high_risk}</div>
+                                    <div class="stat-label">High Risk</div>
+                                </div>
+                            </div>
+                            <br>
+                            <button class="btn btn-success" onclick="downloadPredictions()">
+                                📥 Download Results
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('batch-result').innerHTML = `
+                        <div class="result error">
+                            <h3>❌ ${data.message}</h3>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('batch-loading').style.display = 'none';
+                document.getElementById('batch-result').innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error: ${error.message}</h3>
+                    </div>
+                `;
+            });
+        }
+
+        function downloadPredictions() {
+            window.location.href = '/download/batch_predictions.csv';
+        }
+    </script>
+</body>
+</html>
